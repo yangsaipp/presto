@@ -132,7 +132,7 @@ public class TransformExistsApplyToLateralNode
                 new LimitNode(
                         context.getIdAllocator().getNextId(),
                         applyNode.getSubquery(),
-                        1L,
+                        1L,0L,
                         false),
                 Assignments.of(subqueryTrue, castToRowExpression(TRUE_LITERAL)));
 

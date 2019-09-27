@@ -82,8 +82,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
  * Manages tasks on this worker node
  */
 @Path("/v1/task")
-public class TaskResource
-{
+public class TaskResource {
     private static final Duration ADDITIONAL_WAIT_TIME = new Duration(5, SECONDS);
     private static final Duration DEFAULT_MAX_WAIT_TIME = new Duration(2, SECONDS);
 
@@ -99,8 +98,7 @@ public class TaskResource
             TaskManager taskManager,
             SessionPropertyManager sessionPropertyManager,
             @ForAsyncHttp BoundedExecutor responseExecutor,
-            @ForAsyncHttp ScheduledExecutorService timeoutExecutor)
-    {
+            @ForAsyncHttp ScheduledExecutorService timeoutExecutor) {
         this.taskManager = requireNonNull(taskManager, "taskManager is null");
         this.sessionPropertyManager = requireNonNull(sessionPropertyManager, "sessionPropertyManager is null");
         this.responseExecutor = requireNonNull(responseExecutor, "responseExecutor is null");
@@ -110,8 +108,7 @@ public class TaskResource
     @GET
     @Consumes({APPLICATION_JSON, APPLICATION_JACKSON_SMILE})
     @Produces({APPLICATION_JSON, APPLICATION_JACKSON_SMILE})
-    public List<TaskInfo> getAllTaskInfo(@Context UriInfo uriInfo)
-    {
+    public List<TaskInfo> getAllTaskInfo(@Context UriInfo uriInfo) {
         List<TaskInfo> allTaskInfo = taskManager.getAllTaskInfo();
         if (shouldSummarize(uriInfo)) {
             allTaskInfo = ImmutableList.copyOf(transform(allTaskInfo, TaskInfo::summarize));
@@ -123,8 +120,7 @@ public class TaskResource
     @Path("{taskId}")
     @Consumes({APPLICATION_JSON, APPLICATION_JACKSON_SMILE})
     @Produces({APPLICATION_JSON, APPLICATION_JACKSON_SMILE})
-    public Response createOrUpdateTask(@PathParam("taskId") TaskId taskId, TaskUpdateRequest taskUpdateRequest, @Context UriInfo uriInfo)
-    {
+    public Response createOrUpdateTask(@PathParam("taskId") TaskId taskId, TaskUpdateRequest taskUpdateRequest, @Context UriInfo uriInfo) {
         requireNonNull(taskUpdateRequest, "taskUpdateRequest is null");
 
         Session session = taskUpdateRequest.getSession().toSession(sessionPropertyManager, taskUpdateRequest.getExtraCredentials());
@@ -151,8 +147,7 @@ public class TaskResource
             @HeaderParam(PRESTO_CURRENT_STATE) TaskState currentState,
             @HeaderParam(PRESTO_MAX_WAIT) Duration maxWait,
             @Context UriInfo uriInfo,
-            @Suspended AsyncResponse asyncResponse)
-    {
+            @Suspended AsyncResponse asyncResponse) {
         requireNonNull(taskId, "taskId is null");
 
         if (currentState == null || maxWait == null) {
@@ -190,8 +185,7 @@ public class TaskResource
             @HeaderParam(PRESTO_CURRENT_STATE) TaskState currentState,
             @HeaderParam(PRESTO_MAX_WAIT) Duration maxWait,
             @Context UriInfo uriInfo,
-            @Suspended AsyncResponse asyncResponse)
-    {
+            @Suspended AsyncResponse asyncResponse) {
         requireNonNull(taskId, "taskId is null");
 
         if (currentState == null || maxWait == null) {
@@ -223,15 +217,13 @@ public class TaskResource
     public TaskInfo deleteTask(
             @PathParam("taskId") TaskId taskId,
             @QueryParam("abort") @DefaultValue("true") boolean abort,
-            @Context UriInfo uriInfo)
-    {
+            @Context UriInfo uriInfo) {
         requireNonNull(taskId, "taskId is null");
         TaskInfo taskInfo;
 
         if (abort) {
             taskInfo = taskManager.abortTask(taskId);
-        }
-        else {
+        } else {
             taskInfo = taskManager.cancelTask(taskId);
         }
 
@@ -249,8 +241,7 @@ public class TaskResource
             @PathParam("bufferId") OutputBufferId bufferId,
             @PathParam("token") final long token,
             @HeaderParam(PRESTO_MAX_SIZE) DataSize maxSize,
-            @Suspended AsyncResponse asyncResponse)
-    {
+            @Suspended AsyncResponse asyncResponse) {
         requireNonNull(taskId, "taskId is null");
         requireNonNull(bufferId, "bufferId is null");
 
@@ -270,9 +261,9 @@ public class TaskResource
             Status status;
             if (serializedPages.isEmpty()) {
                 status = Status.NO_CONTENT;
-            }
-            else {
-                entity = new GenericEntity<>(serializedPages, new TypeToken<List<Page>>() {}.getType());
+            } else {
+                entity = new GenericEntity<>(serializedPages, new TypeToken<List<Page>>() {
+                }.getType());
                 status = Status.OK;
             }
 
@@ -305,8 +296,7 @@ public class TaskResource
     public void acknowledgeResults(
             @PathParam("taskId") TaskId taskId,
             @PathParam("bufferId") OutputBufferId bufferId,
-            @PathParam("token") final long token)
-    {
+            @PathParam("token") final long token) {
         requireNonNull(taskId, "taskId is null");
         requireNonNull(bufferId, "bufferId is null");
 
@@ -316,8 +306,7 @@ public class TaskResource
     @DELETE
     @Path("{taskId}/results/{bufferId}")
     @Produces(APPLICATION_JSON)
-    public void abortResults(@PathParam("taskId") TaskId taskId, @PathParam("bufferId") OutputBufferId bufferId, @Context UriInfo uriInfo)
-    {
+    public void abortResults(@PathParam("taskId") TaskId taskId, @PathParam("bufferId") OutputBufferId bufferId, @Context UriInfo uriInfo) {
         requireNonNull(taskId, "taskId is null");
         requireNonNull(bufferId, "bufferId is null");
 
@@ -326,8 +315,7 @@ public class TaskResource
 
     @DELETE
     @Path("{taskId}/remote-source/{remoteSourceTaskId}")
-    public void removeRemoteSource(@PathParam("taskId") TaskId taskId, @PathParam("remoteSourceTaskId") TaskId remoteSourceTaskId)
-    {
+    public void removeRemoteSource(@PathParam("taskId") TaskId taskId, @PathParam("remoteSourceTaskId") TaskId remoteSourceTaskId) {
         requireNonNull(taskId, "taskId is null");
         requireNonNull(remoteSourceTaskId, "remoteSourceTaskId is null");
 
@@ -336,25 +324,21 @@ public class TaskResource
 
     @Managed
     @Nested
-    public TimeStat getReadFromOutputBufferTime()
-    {
+    public TimeStat getReadFromOutputBufferTime() {
         return readFromOutputBufferTime;
     }
 
     @Managed
     @Nested
-    public TimeStat getResultsRequestTime()
-    {
+    public TimeStat getResultsRequestTime() {
         return resultsRequestTime;
     }
 
-    private static boolean shouldSummarize(UriInfo uriInfo)
-    {
+    private static boolean shouldSummarize(UriInfo uriInfo) {
         return uriInfo.getQueryParameters().containsKey("summarize");
     }
 
-    private static Duration randomizeWaitTime(Duration waitTime)
-    {
+    private static Duration randomizeWaitTime(Duration waitTime) {
         // Randomize in [T/2, T], so wait is not near zero and the client-supplied max wait time is respected
         long halfWaitMillis = waitTime.toMillis() / 2;
         return new Duration(halfWaitMillis + ThreadLocalRandom.current().nextLong(halfWaitMillis), MILLISECONDS);

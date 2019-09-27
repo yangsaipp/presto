@@ -32,6 +32,7 @@ public class QuerySpecification
     private final Optional<Expression> having;
     private final Optional<OrderBy> orderBy;
     private final Optional<String> limit;
+    private final Optional<String> offset;
 
     public QuerySpecification(
             Select select,
@@ -40,12 +41,17 @@ public class QuerySpecification
             Optional<GroupBy> groupBy,
             Optional<Expression> having,
             Optional<OrderBy> orderBy,
+            Optional<String> offset,
             Optional<String> limit)
     {
-        this(Optional.empty(), select, from, where, groupBy, having, orderBy, limit);
+        this(Optional.empty(), select, from, where, groupBy, having, orderBy, offset, limit);
     }
 
-    public QuerySpecification(
+    public Optional<String> getOffset() {
+		return offset;
+	}
+
+	public QuerySpecification(
             NodeLocation location,
             Select select,
             Optional<Relation> from,
@@ -53,9 +59,10 @@ public class QuerySpecification
             Optional<GroupBy> groupBy,
             Optional<Expression> having,
             Optional<OrderBy> orderBy,
+            Optional<String> offset,
             Optional<String> limit)
     {
-        this(Optional.of(location), select, from, where, groupBy, having, orderBy, limit);
+        this(Optional.of(location), select, from, where, groupBy, having, orderBy, offset, limit);
     }
 
     private QuerySpecification(
@@ -66,6 +73,7 @@ public class QuerySpecification
             Optional<GroupBy> groupBy,
             Optional<Expression> having,
             Optional<OrderBy> orderBy,
+            Optional<String> offset,
             Optional<String> limit)
     {
         super(location);
@@ -76,6 +84,7 @@ public class QuerySpecification
         requireNonNull(having, "having is null");
         requireNonNull(orderBy, "orderBy is null");
         requireNonNull(limit, "limit is null");
+        requireNonNull(limit, "offset is null");
 
         this.select = select;
         this.from = from;
@@ -83,6 +92,7 @@ public class QuerySpecification
         this.groupBy = groupBy;
         this.having = having;
         this.orderBy = orderBy;
+        this.offset = offset;
         this.limit = limit;
     }
 
@@ -150,6 +160,7 @@ public class QuerySpecification
                 .add("groupBy", groupBy)
                 .add("having", having.orElse(null))
                 .add("orderBy", orderBy)
+                .add("offset", offset.orElse(null))
                 .add("limit", limit.orElse(null))
                 .toString();
     }
@@ -170,12 +181,13 @@ public class QuerySpecification
                 Objects.equals(groupBy, o.groupBy) &&
                 Objects.equals(having, o.having) &&
                 Objects.equals(orderBy, o.orderBy) &&
+                Objects.equals(offset, o.offset) &&
                 Objects.equals(limit, o.limit);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(select, from, where, groupBy, having, orderBy, limit);
+        return Objects.hash(select, from, where, groupBy, having, orderBy, offset, limit);
     }
 }

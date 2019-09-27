@@ -147,8 +147,10 @@ property
 queryNoWith:
       queryTerm
       (ORDER BY sortItem (',' sortItem)*)?
+      (OFFSET offset=INTEGER_VALUE)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
     ;
+OFFSET: 'offset' || 'OFFSET';
 
 queryTerm
     : queryPrimary                                                             #queryTermDefault

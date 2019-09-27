@@ -57,17 +57,24 @@ public class LimitPushDown
     private static class LimitContext
     {
         private final long count;
+        private final long offset;
         private final boolean partial;
 
-        public LimitContext(long count, boolean partial)
+        public LimitContext(long count, long offset, boolean partial)
         {
             this.count = count;
             this.partial = partial;
+            this.offset = offset;
         }
 
         public long getCount()
         {
             return count;
+        }
+
+        public long getOffset()
+        {
+            return offset;
         }
 
         public boolean isPartial()
@@ -80,6 +87,7 @@ public class LimitPushDown
         {
             return toStringHelper(this)
                     .add("count", count)
+                    .add("offset", offset)
                     .add("partial", partial)
                     .toString();
         }
@@ -103,7 +111,7 @@ public class LimitPushDown
             LimitContext limit = context.get();
             if (limit != null) {
                 // Drop in a LimitNode b/c we cannot push our limit down any further
-                rewrittenNode = new LimitNode(idAllocator.getNextId(), rewrittenNode, limit.getCount(), limit.isPartial());
+                rewrittenNode = new LimitNode(idAllocator.getNextId(), rewrittenNode, limit.getCount(), limit.getOffset(),limit.isPartial());
             }
             return rewrittenNode;
         }
@@ -124,7 +132,7 @@ public class LimitPushDown
             }
 
             // default visitPlan logic will insert the limit node
-            return context.rewrite(node.getSource(), new LimitContext(count, false));
+            return context.rewrite(node.getSource(), new LimitContext(count, node.getOffset(),false));
         }
 
         @Override
@@ -143,7 +151,7 @@ public class LimitPushDown
             PlanNode rewrittenNode = context.defaultRewrite(node);
             if (limit != null) {
                 // Drop in a LimitNode b/c limits cannot be pushed through aggregations
-                rewrittenNode = new LimitNode(idAllocator.getNextId(), rewrittenNode, limit.getCount(), limit.isPartial());
+                rewrittenNode = new LimitNode(idAllocator.getNextId(), rewrittenNode, limit.getCount(), limit.getOffset(), limit.isPartial());
             }
             return rewrittenNode;
         }
@@ -204,7 +212,7 @@ public class LimitPushDown
 
             LimitContext childLimit = null;
             if (limit != null) {
-                childLimit = new LimitContext(limit.getCount(), true);
+                childLimit = new LimitContext(limit.getCount(), limit.getOffset(),true);
             }
 
             List<PlanNode> sources = new ArrayList<>();
@@ -214,7 +222,7 @@ public class LimitPushDown
 
             PlanNode output = new UnionNode(node.getId(), sources, node.getVariableMapping());
             if (limit != null) {
-                output = new LimitNode(idAllocator.getNextId(), output, limit.getCount(), limit.isPartial());
+                output = new LimitNode(idAllocator.getNextId(), output, limit.getCount(), limit.getOffset() ,limit.isPartial());
             }
             return output;
         }

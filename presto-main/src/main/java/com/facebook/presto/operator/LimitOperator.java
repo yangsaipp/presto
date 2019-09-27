@@ -30,13 +30,18 @@ public class LimitOperator
         private final int operatorId;
         private final PlanNodeId planNodeId;
         private final long limit;
+        private final long offset;
+        private final boolean partial;
         private boolean closed;
+        
 
-        public LimitOperatorFactory(int operatorId, PlanNodeId planNodeId, long limit)
+        public LimitOperatorFactory(int operatorId, PlanNodeId planNodeId, long limit, long offset, boolean partial)
         {
             this.operatorId = operatorId;
             this.planNodeId = requireNonNull(planNodeId, "planNodeId is null");
             this.limit = limit;
+            this.offset = offset;
+            this.partial = partial;
         }
 
         @Override
@@ -44,7 +49,13 @@ public class LimitOperator
         {
             checkState(!closed, "Factory is already closed");
             OperatorContext operatorContext = driverContext.addOperatorContext(operatorId, planNodeId, LimitOperator.class.getSimpleName());
-            return new LimitOperator(operatorContext, limit);
+            // partial 阶段，进行 rewrite
+            if(partial) {
+            	System.out.println(String.format("==== createOperator...。partial=%b, offset=%d, limit=%d", partial, offset, limit));
+            	return new LimitOperator(operatorContext, offset + limit, 0);
+            }
+            System.out.println(String.format("==== createOperator。partial=%b, offset=%d, limit=%d",partial, offset, limit));
+            return new LimitOperator(operatorContext, limit, offset);
         }
 
         @Override
@@ -56,19 +67,21 @@ public class LimitOperator
         @Override
         public OperatorFactory duplicate()
         {
-            return new LimitOperatorFactory(operatorId, planNodeId, limit);
+            return new LimitOperatorFactory(operatorId, planNodeId, limit, offset, partial);
         }
     }
 
     private final OperatorContext operatorContext;
     private Page nextPage;
     private long remainingLimit;
+    private long offset;
 
-    public LimitOperator(OperatorContext operatorContext, long limit)
+    public LimitOperator(OperatorContext operatorContext, long limit, long offset)
     {
         this.operatorContext = requireNonNull(operatorContext, "operatorContext is null");
 
         checkArgument(limit >= 0, "limit must be at least zero");
+        this.offset = offset;
         this.remainingLimit = limit;
     }
 
@@ -100,19 +113,33 @@ public class LimitOperator
     public void addInput(Page page)
     {
         checkState(needsInput());
+        System.out.println(String.format("==== addInput...。pageCount=%d, offset=%d, limit=%d, this=%s", page.getPositionCount(), offset, remainingLimit, this));
+        // 如果当前的偏移量大于当前page的行数，则重置偏移量
+        if (offset >= page.getPositionCount()) {
+            offset -= page.getPositionCount();
+        }else {
+        	if (offset == 0 && remainingLimit >= page.getPositionCount()) {
+                nextPage = page;
+                remainingLimit -= page.getPositionCount();
+            } else {
+                // 当前page还剩余多少行元素
+                long remainingPosition = (int) (page.getPositionCount() - offset);
 
-        if (page.getPositionCount() <= remainingLimit) {
-            remainingLimit -= page.getPositionCount();
-            nextPage = page;
-        }
-        else {
-            Block[] blocks = new Block[page.getChannelCount()];
-            for (int channel = 0; channel < page.getChannelCount(); channel++) {
-                Block block = page.getBlock(channel);
-                blocks[channel] = block.getRegion(0, (int) remainingLimit);
+                // 如果用户需要的limit的数量大于等于当前page剩余的行数，则当前page只能提供remainingPosition行
+                // cntInPage为当前page提供的行数, 通常情况下, remainingLimit >= remainingPosition = true
+                long cntInPage = remainingLimit >= remainingPosition ? remainingPosition : remainingLimit;
+
+                Block[] blocks = new Block[page.getChannelCount()];
+                for (int channel = 0; channel < page.getChannelCount(); channel++) {
+                    Block block = page.getBlock(channel);
+                    blocks[channel] = block.getRegion((int) offset, (int) cntInPage);
+                }
+                nextPage = new Page((int) cntInPage, blocks);
+                // 用户还需要多少limit元素，即 offset X limit Y 中的 Y 的个数
+                remainingLimit -= cntInPage;
+                // 把当前的偏移量置成 0
+                offset = 0;
             }
-            nextPage = new Page((int) remainingLimit, blocks);
-            remainingLimit = 0;
         }
     }
 

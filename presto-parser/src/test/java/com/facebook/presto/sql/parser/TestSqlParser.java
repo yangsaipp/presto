@@ -467,6 +467,14 @@ public class TestSqlParser
     }
 
     @Test
+    public void testOffsetQuery()
+    {
+        Statement statement = new SqlParser().createStatement("SELECT 123.456E7 FROM DUAL OFFSET 4 LIMIT 2");
+        System.out.println(statement);
+
+    }
+
+    @Test
     public void testIntersect()
     {
         assertStatement("SELECT 123 INTERSECT DISTINCT SELECT 123 INTERSECT ALL SELECT 123",
@@ -498,6 +506,7 @@ public class TestSqlParser
     {
         return new QuerySpecification(
                 selectList(new LongLiteral("123")),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -727,6 +736,7 @@ public class TestSqlParser
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -736,6 +746,7 @@ public class TestSqlParser
                         Optional.empty(),
                         new QuerySpecification(
                                 selectList(new FunctionCall(QualifiedName.of("substr"), Lists.newArrayList(new StringLiteral(givenString), new LongLiteral("2"), new LongLiteral("3")))),
+                                Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
@@ -760,6 +771,7 @@ public class TestSqlParser
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -769,6 +781,7 @@ public class TestSqlParser
                         Optional.empty(),
                         new QuerySpecification(
                                 selectList(new FunctionCall(QualifiedName.of("substring"), Lists.newArrayList(new StringLiteral(givenString), new LongLiteral("2"), new LongLiteral("3")))),
+                                Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
@@ -796,6 +809,7 @@ public class TestSqlParser
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -814,6 +828,7 @@ public class TestSqlParser
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -824,6 +839,7 @@ public class TestSqlParser
                         new QuerySpecification(
                                 selectList(
                                         new DereferenceExpression(new Cast(new Row(Lists.newArrayList(new LongLiteral("11"), new LongLiteral("12"))), "ROW(COL0 INTEGER,COL1 INTEGER)"), identifier("col0"))),
+                                Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
@@ -850,6 +866,7 @@ public class TestSqlParser
                                         new Identifier("a"),
                                         ASCENDING,
                                         UNDEFINED)))),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -868,6 +885,7 @@ public class TestSqlParser
                                 Optional.of(new GroupBy(false, ImmutableList.of(new SimpleGroupBy(ImmutableList.of(new Identifier("a")))))),
                                 Optional.empty(),
                                 Optional.empty(),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -884,6 +902,7 @@ public class TestSqlParser
                                         new SimpleGroupBy(ImmutableList.of(new Identifier("b")))))),
                                 Optional.empty(),
                                 Optional.empty(),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -898,6 +917,7 @@ public class TestSqlParser
                                 Optional.of(new GroupBy(false, ImmutableList.of(new SimpleGroupBy(ImmutableList.of())))),
                                 Optional.empty(),
                                 Optional.empty(),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -910,6 +930,7 @@ public class TestSqlParser
                                 Optional.of(new Table(QualifiedName.of("table1"))),
                                 Optional.empty(),
                                 Optional.of(new GroupBy(false, ImmutableList.of(new GroupingSets(ImmutableList.of(ImmutableList.of(new Identifier("a"))))))),
+                                Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty()),
@@ -929,6 +950,7 @@ public class TestSqlParser
                                 Optional.of(new Table(QualifiedName.of("table1"))),
                                 Optional.empty(),
                                 Optional.of(new GroupBy(false, ImmutableList.of(new GroupingSets(ImmutableList.of(ImmutableList.of(new Identifier("a")), ImmutableList.of(new Identifier("b"))))))),
+                                Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty()),
@@ -951,6 +973,7 @@ public class TestSqlParser
                                         new Rollup(ImmutableList.of(new Identifier("d")))))),
                                 Optional.empty(),
                                 Optional.empty(),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -969,6 +992,7 @@ public class TestSqlParser
                                                         ImmutableList.of())),
                                         new Cube(ImmutableList.of(new Identifier("c"))),
                                         new Rollup(ImmutableList.of(new Identifier("d")))))),
+                                Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty()),
@@ -1817,6 +1841,7 @@ public class TestSqlParser
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -2055,6 +2080,7 @@ public class TestSqlParser
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
+                                Optional.empty(),
                                 Optional.empty()),
                         Optional.empty(),
                         Optional.empty()));
@@ -2107,6 +2133,7 @@ public class TestSqlParser
                                                 false,
                                                 ImmutableList.of(new Identifier("x")))),
                                 Optional.of(table(QualifiedName.of("t"))),
+                                Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),

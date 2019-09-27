@@ -1015,8 +1015,8 @@ public class LocalExecutionPlanner
         public PhysicalOperation visitLimit(LimitNode node, LocalExecutionPlanContext context)
         {
             PhysicalOperation source = node.getSource().accept(this, context);
-
-            OperatorFactory operatorFactory = new LimitOperatorFactory(context.getNextOperatorId(), node.getId(), node.getCount());
+            System.out.println("==LocalExecutionPlanner=== limmit:" + node.getCount() +" offset:" + node.getOffset());
+            OperatorFactory operatorFactory = new LimitOperatorFactory(context.getNextOperatorId(), node.getId(), node.getCount(),node.getOffset(), node.isPartial());
             return new PhysicalOperation(operatorFactory, source.getLayout(), context, source);
         }
 

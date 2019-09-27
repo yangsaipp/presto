@@ -265,6 +265,7 @@ public class TestEffectivePredicateExtractor
                                 equals(BE, CE),
                                 lessThan(CE, bigintLiteral(10)))),
                 1,
+                0,
                 false);
 
         Expression effectivePredicate = effectivePredicateExtractor.extract(node, types);

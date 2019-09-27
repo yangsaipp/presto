@@ -69,7 +69,7 @@ public class TestLimitOperator
                 .addSequencePage(2, 6)
                 .build();
 
-        OperatorFactory operatorFactory = new LimitOperatorFactory(0, new PlanNodeId("test"), 5);
+        OperatorFactory operatorFactory = new LimitOperatorFactory(0, new PlanNodeId("test"), 5,0, false);
 
         MaterializedResult expected = resultBuilder(driverContext.getSession(), BIGINT)
                 .page(createSequencePage(ImmutableList.of(BIGINT), 3, 1))
@@ -88,7 +88,7 @@ public class TestLimitOperator
                 .addSequencePage(2, 6)
                 .build();
 
-        OperatorFactory operatorFactory = new LimitOperatorFactory(0, new PlanNodeId("test"), 6);
+        OperatorFactory operatorFactory = new LimitOperatorFactory(0, new PlanNodeId("test"), 6, 0, false);
 
         List<Page> expected = rowPagesBuilder(BIGINT)
                 .addSequencePage(3, 1)

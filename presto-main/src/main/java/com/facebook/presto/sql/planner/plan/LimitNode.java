@@ -34,6 +34,7 @@ public class LimitNode
 {
     private final PlanNode source;
     private final long count;
+    private final long offset;
     private final boolean partial;
 
     @JsonCreator
@@ -41,6 +42,7 @@ public class LimitNode
             @JsonProperty("id") PlanNodeId id,
             @JsonProperty("source") PlanNode source,
             @JsonProperty("count") long count,
+            @JsonProperty("offset") long offset,
             @JsonProperty("partial") boolean partial)
     {
         super(id);
@@ -51,9 +53,15 @@ public class LimitNode
 
         this.source = source;
         this.count = count;
+        this.offset = offset;
     }
 
-    @Override
+    @JsonProperty
+    public long getOffset() {
+		return offset;
+	}
+
+	@Override
     public List<PlanNode> getSources()
     {
         return ImmutableList.of(source);
@@ -92,6 +100,6 @@ public class LimitNode
     @Override
     public PlanNode replaceChildren(List<PlanNode> newChildren)
     {
-        return new LimitNode(getId(), Iterables.getOnlyElement(newChildren), count, isPartial());
+        return new LimitNode(getId(), Iterables.getOnlyElement(newChildren), count,offset,isPartial());
     }
 }

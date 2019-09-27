@@ -913,20 +913,21 @@ class QueryPlanner
 
     private PlanBuilder limit(PlanBuilder subPlan, Query node)
     {
-        return limit(subPlan, node.getOrderBy(), node.getLimit());
+        return limit(subPlan, node.getOrderBy(), node.getLimit(), node.getOffset());
     }
 
     private PlanBuilder limit(PlanBuilder subPlan, QuerySpecification node)
     {
-        return limit(subPlan, node.getOrderBy(), node.getLimit());
+        return limit(subPlan, node.getOrderBy(), node.getLimit(), node.getOffset());
     }
 
-    private PlanBuilder limit(PlanBuilder subPlan, Optional<OrderBy> orderBy, Optional<String> limit)
+    private PlanBuilder limit(PlanBuilder subPlan, Optional<OrderBy> orderBy, Optional<String> limit, Optional<String> offset)
     {
         if (!orderBy.isPresent() && limit.isPresent()) {
             if (!limit.get().equalsIgnoreCase("all")) {
                 long limitValue = Long.parseLong(limit.get());
-                subPlan = subPlan.withNewRoot(new LimitNode(idAllocator.getNextId(), subPlan.getRoot(), limitValue, false));
+                long offsetValue = Long.parseLong(offset.orElse("0"));
+                subPlan = subPlan.withNewRoot(new LimitNode(idAllocator.getNextId(), subPlan.getRoot(), limitValue, offsetValue,false));
             }
         }
 

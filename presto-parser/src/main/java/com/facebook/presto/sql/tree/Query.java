@@ -29,6 +29,7 @@ public class Query
     private final QueryBody queryBody;
     private final Optional<OrderBy> orderBy;
     private final Optional<String> limit;
+    private final Optional<String> offset;
 
     public Query(
             Optional<With> with,
@@ -36,24 +37,48 @@ public class Query
             Optional<OrderBy> orderBy,
             Optional<String> limit)
     {
-        this(Optional.empty(), with, queryBody, orderBy, limit);
+        this(with, queryBody, orderBy, Optional.empty(), limit);
     }
-
+    
     public Query(
+            Optional<With> with,
+            QueryBody queryBody,
+            Optional<OrderBy> orderBy,
+            Optional<String> offset,
+            Optional<String> limit)
+    {
+        this(Optional.empty(), with, queryBody, orderBy, offset, limit);
+    }
+    
+    
+
+	public Query(
             NodeLocation location,
             Optional<With> with,
             QueryBody queryBody,
             Optional<OrderBy> orderBy,
             Optional<String> limit)
     {
-        this(Optional.of(location), with, queryBody, orderBy, limit);
+        this(location, with, queryBody, orderBy, Optional.empty(), limit);
     }
+
+	public Query(
+			NodeLocation location,
+			Optional<With> with,
+			QueryBody queryBody,
+			Optional<OrderBy> orderBy,
+			Optional<String> offset,
+			Optional<String> limit)
+	{
+		this(Optional.of(location), with, queryBody, orderBy, offset, limit);
+	}
 
     private Query(
             Optional<NodeLocation> location,
             Optional<With> with,
             QueryBody queryBody,
             Optional<OrderBy> orderBy,
+            Optional<String> offset,
             Optional<String> limit)
     {
         super(location);
@@ -61,13 +86,16 @@ public class Query
         requireNonNull(queryBody, "queryBody is null");
         requireNonNull(orderBy, "orderBy is null");
         requireNonNull(limit, "limit is null");
+        requireNonNull(offset, "offset is null");
 
         this.with = with;
         this.queryBody = queryBody;
         this.orderBy = orderBy;
         this.limit = limit;
+        this.offset = offset;
     }
 
+    
     public Optional<With> getWith()
     {
         return with;
@@ -87,6 +115,11 @@ public class Query
     {
         return limit;
     }
+    
+    public Optional<String> getOffset() {
+  		return offset;
+  	}
+
 
     @Override
     public <R, C> R accept(AstVisitor<R, C> visitor, C context)
@@ -111,6 +144,7 @@ public class Query
                 .add("with", with.orElse(null))
                 .add("queryBody", queryBody)
                 .add("orderBy", orderBy)
+                .add("offset", offset.orElse(null))
                 .add("limit", limit.orElse(null))
                 .omitNullValues()
                 .toString();
@@ -129,12 +163,13 @@ public class Query
         return Objects.equals(with, o.with) &&
                 Objects.equals(queryBody, o.queryBody) &&
                 Objects.equals(orderBy, o.orderBy) &&
+                Objects.equals(offset, o.offset)&&
                 Objects.equals(limit, o.limit);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(with, queryBody, orderBy, limit);
+        return Objects.hash(with, queryBody, orderBy, offset, limit);
     }
 }
