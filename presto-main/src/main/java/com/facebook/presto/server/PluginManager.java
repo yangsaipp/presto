@@ -148,9 +148,9 @@ public class PluginManager
             }
         }
 
-        for (String plugin : plugins) {
-            loadPlugin(plugin);
-        }
+//        for (String plugin : plugins) {
+//            loadPlugin(plugin);
+//        }
 
         metadata.verifyComparableOrderableContract();
 
