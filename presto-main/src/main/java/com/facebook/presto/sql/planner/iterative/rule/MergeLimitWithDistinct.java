@@ -61,6 +61,7 @@ public class MergeLimitWithDistinct
                         parent.getId(),
                         child.getSource(),
                         parent.getCount(),
+                        parent.getOffset(),
                         false,
                         child.getGroupingKeys(),
                         child.getHashVariable()));

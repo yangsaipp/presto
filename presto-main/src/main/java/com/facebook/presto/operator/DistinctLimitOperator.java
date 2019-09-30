@@ -44,7 +44,9 @@ public class DistinctLimitOperator
         private final PlanNodeId planNodeId;
         private final List<Integer> distinctChannels;
         private final List<Type> sourceTypes;
+        private final long offset;
         private final long limit;
+        private final boolean partial;
         private final Optional<Integer> hashChannel;
         private boolean closed;
         private final JoinCompiler joinCompiler;
@@ -54,17 +56,24 @@ public class DistinctLimitOperator
                 PlanNodeId planNodeId,
                 List<? extends Type> sourceTypes,
                 List<Integer> distinctChannels,
+                long offset,
                 long limit,
                 Optional<Integer> hashChannel,
-                JoinCompiler joinCompiler)
+                JoinCompiler joinCompiler,
+                boolean partial
+                )
         {
+        	
             this.operatorId = operatorId;
             this.planNodeId = requireNonNull(planNodeId, "planNodeId is null");
             this.sourceTypes = ImmutableList.copyOf(requireNonNull(sourceTypes, "sourceTypes is null"));
             this.distinctChannels = requireNonNull(distinctChannels, "distinctChannels is null");
 
             checkArgument(limit >= 0, "limit must be at least zero");
+//            checkArgument(offset >= 0, "offset must be at least zero");
             this.limit = limit;
+            this.offset = offset;
+            this.partial = partial;
             this.hashChannel = requireNonNull(hashChannel, "hashChannel is null");
             this.joinCompiler = requireNonNull(joinCompiler, "joinCompiler is null");
         }
@@ -77,7 +86,10 @@ public class DistinctLimitOperator
             List<Type> distinctTypes = distinctChannels.stream()
                     .map(sourceTypes::get)
                     .collect(toImmutableList());
-            return new DistinctLimitOperator(operatorContext, distinctChannels, distinctTypes, limit, hashChannel, joinCompiler);
+            if(partial) {
+            	return new DistinctLimitOperator(operatorContext, distinctChannels, distinctTypes, 0, limit + offset, hashChannel, joinCompiler);
+            }
+            return new DistinctLimitOperator(operatorContext, distinctChannels, distinctTypes, offset, limit, hashChannel, joinCompiler);
         }
 
         @Override
@@ -89,7 +101,7 @@ public class DistinctLimitOperator
         @Override
         public OperatorFactory duplicate()
         {
-            return new DistinctLimitOperatorFactory(operatorId, planNodeId, sourceTypes, distinctChannels, limit, hashChannel, joinCompiler);
+            return new DistinctLimitOperatorFactory(operatorId, planNodeId, sourceTypes, distinctChannels, limit, offset, hashChannel, joinCompiler, partial);
         }
     }
 
@@ -98,7 +110,7 @@ public class DistinctLimitOperator
 
     private Page inputPage;
     private long remainingLimit;
-
+    private long offset;
     private boolean finishing;
 
     private final List<Integer> outputChannels;
@@ -109,12 +121,13 @@ public class DistinctLimitOperator
     private GroupByIdBlock groupByIds;
     private Work<GroupByIdBlock> unfinishedWork;
 
-    public DistinctLimitOperator(OperatorContext operatorContext, List<Integer> distinctChannels, List<Type> distinctTypes, long limit, Optional<Integer> hashChannel, JoinCompiler joinCompiler)
+    public DistinctLimitOperator(OperatorContext operatorContext, List<Integer> distinctChannels, List<Type> distinctTypes, long offset, long limit, Optional<Integer> hashChannel, JoinCompiler joinCompiler)
     {
         this.operatorContext = requireNonNull(operatorContext, "operatorContext is null");
         this.localUserMemoryContext = operatorContext.localUserMemoryContext();
         requireNonNull(distinctChannels, "distinctChannels is null");
         checkArgument(limit >= 0, "limit must be at least zero");
+        checkArgument(offset >= 0, "limit must be at least zero");
         requireNonNull(hashChannel, "hashChannel is null");
 
         outputChannels = ImmutableList.<Integer>builder()
@@ -131,6 +144,7 @@ public class DistinctLimitOperator
                 joinCompiler,
                 this::updateMemoryReservation);
         remainingLimit = limit;
+        this.offset = offset;
     }
 
     @Override
@@ -184,10 +198,16 @@ public class DistinctLimitOperator
         int[] distinctPositions = new int[inputPage.getPositionCount()];
         for (int position = 0; position < groupByIds.getPositionCount(); position++) {
             if (groupByIds.getGroupId(position) == nextDistinctId) {
-                distinctPositions[distinctCount] = position;
-                distinctCount++;
+            	if(offset == 0) {
+            		distinctPositions[distinctCount] = position;
+                    distinctCount++;
 
-                remainingLimit--;
+                    remainingLimit--;
+            	}else {
+            		offset--;
+            	}
+            	
+                
                 nextDistinctId++;
                 if (remainingLimit == 0) {
                     break;

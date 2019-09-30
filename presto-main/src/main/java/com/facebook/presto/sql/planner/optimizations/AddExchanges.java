@@ -531,7 +531,7 @@ public class AddExchanges
                         gatheringExchange(
                                 idAllocator.getNextId(),
                                 REMOTE_STREAMING,
-                                new DistinctLimitNode(idAllocator.getNextId(), child.getNode(), node.getLimit(), true, node.getDistinctVariables(), node.getHashVariable())),
+                                new DistinctLimitNode(idAllocator.getNextId(), child.getNode(), node.getLimit(),node.getOffset(), true, node.getDistinctVariables(), node.getHashVariable())),
                         child.getProperties());
             }
 

@@ -35,6 +35,7 @@ public class DistinctLimitNode
 {
     private final PlanNode source;
     private final long limit;
+    private final long offset;
     private final boolean partial;
     private final List<VariableReferenceExpression> distinctVariables;
     private final Optional<VariableReferenceExpression> hashVariable;
@@ -44,6 +45,7 @@ public class DistinctLimitNode
             @JsonProperty("id") PlanNodeId id,
             @JsonProperty("source") PlanNode source,
             @JsonProperty("limit") long limit,
+            @JsonProperty("offset") long offset,
             @JsonProperty("partial") boolean partial,
             @JsonProperty("distinctVariables") List<VariableReferenceExpression> distinctVariables,
             @JsonProperty("hashVariable") Optional<VariableReferenceExpression> hashVariable)
@@ -51,7 +53,9 @@ public class DistinctLimitNode
         super(id);
         this.source = requireNonNull(source, "source is null");
         checkArgument(limit >= 0, "limit must be greater than or equal to zero");
+        checkArgument(offset >= 0, "offset must be greater than or equal to zero");
         this.limit = limit;
+        this.offset = offset;
         this.partial = partial;
         this.distinctVariables = ImmutableList.copyOf(distinctVariables);
         this.hashVariable = requireNonNull(hashVariable, "hashVariable is null");
@@ -64,6 +68,11 @@ public class DistinctLimitNode
         return ImmutableList.of(source);
     }
 
+    @JsonProperty
+    public long getOffset() {
+		return offset;
+	}
+    
     @JsonProperty
     public PlanNode getSource()
     {
@@ -111,6 +120,6 @@ public class DistinctLimitNode
     @Override
     public PlanNode replaceChildren(List<PlanNode> newChildren)
     {
-        return new DistinctLimitNode(getId(), Iterables.getOnlyElement(newChildren), limit, partial, distinctVariables, hashVariable);
+        return new DistinctLimitNode(getId(), Iterables.getOnlyElement(newChildren), limit, offset, partial, distinctVariables, hashVariable);
     }
 }
