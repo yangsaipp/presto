@@ -54,6 +54,7 @@ public class GroupedTopNBuilder
 
     private final List<Type> sourceTypes;
     private final int topN;
+    private final int offset;
     private final boolean produceRowNumber;
     private final GroupByHash groupByHash;
 
@@ -73,6 +74,7 @@ public class GroupedTopNBuilder
     public GroupedTopNBuilder(
             List<Type> sourceTypes,
             PageWithPositionComparator comparator,
+            int offset,
             int topN,
             boolean produceRowNumber,
             GroupByHash groupByHash)
@@ -80,6 +82,7 @@ public class GroupedTopNBuilder
         this.sourceTypes = requireNonNull(sourceTypes, "sourceTypes is null");
         checkArgument(topN > 0, "topN must be > 0");
         this.topN = topN;
+        this.offset = offset;
         this.produceRowNumber = produceRowNumber;
         this.groupByHash = requireNonNull(groupByHash, "groupByHash is not null");
 
@@ -389,6 +392,9 @@ public class GroupedTopNBuilder
 
         private ObjectBigArray<Row> currentRows = nextGroupedRows();
 
+        // 当前遍历的Row index
+        private int currentRowIndex;
+
         ResultIterator()
         {
             if (produceRowNumber) {
@@ -417,14 +423,20 @@ public class GroupedTopNBuilder
                 }
 
                 Row row = currentRows.get(currentGroupPosition);
-                for (int i = 0; i < sourceTypes.size(); i++) {
-                    sourceTypes.get(i).appendTo(pageReferences.get(row.getPageId()).getPage().getBlock(i), row.getPosition(), pageBuilder.getBlockBuilder(i));
+                if(currentRowIndex >= offset) {
+
+                    for (int i = 0; i < sourceTypes.size(); i++) {
+                        sourceTypes.get(i).appendTo(pageReferences.get(row.getPageId()).getPage().getBlock(i), row.getPosition(), pageBuilder.getBlockBuilder(i));
+                    }
+
+                    if (produceRowNumber) {
+                        BIGINT.writeLong(pageBuilder.getBlockBuilder(sourceTypes.size()), currentGroupPosition + 1);
+                    }
+                    pageBuilder.declarePosition();
                 }
 
-                if (produceRowNumber) {
-                    BIGINT.writeLong(pageBuilder.getBlockBuilder(sourceTypes.size()), currentGroupPosition + 1);
-                }
-                pageBuilder.declarePosition();
+                currentRowIndex++;
+
                 currentGroupPosition++;
 
                 // deference the row; no need to compact the pages but remove them if completely unused

@@ -183,10 +183,24 @@ public class LimitPushDown
             }
 
             long count = node.getCount();
+            long offset = node.getOffset();
+
             if (limit != null) {
-                count = Math.min(count, limit.getCount());
+                if(limit.getCount() + limit.getOffset() <= count) {
+                    // 外层limit数据范围在内层的TOP的数据访问之内，如select * from (SELECT employee_id, employee_name FROM ys.jadp.top_employee_2 order by employee_name offset 3 LIMIT 5) t offset 2 limmit 2
+                    offset = offset + limit.getOffset();
+                    count = Math.min(count, limit.getCount());
+                }else {
+                    // 外层limit数据范围在内层的TOP的数据访问之外，如select * from (SELECT employee_id, employee_name FROM ys.jadp.top_employee_2 order by employee_name offset 3 LIMIT 5) t offset 2 limmit 5
+                    offset = offset + limit.getOffset();
+                    count = count - limit.getOffset();
+                    if(count < 0) {
+                        // 外层limit的偏移量已经超过内层的总数，如 select * from (SELECT employee_id, employee_name FROM ys.jadp.top_employee_2 order by employee_name offset 3 LIMIT 5) t offset 5 limmit 5
+                        count = 0;
+                    }
+                }
             }
-            return new TopNNode(node.getId(), rewrittenSource, count, node.getOrderingScheme(), node.getStep());
+            return new TopNNode(node.getId(), rewrittenSource, offset, count, node.getOrderingScheme(), node.getStep());
         }
 
         @Override
@@ -197,7 +211,7 @@ public class LimitPushDown
 
             PlanNode rewrittenSource = context.rewrite(node.getSource());
             if (limit != null) {
-                return new TopNNode(node.getId(), rewrittenSource, limit.getCount(), node.getOrderingScheme(), TopNNode.Step.SINGLE);
+                return new TopNNode(node.getId(), rewrittenSource, limit.getOffset(), limit.getCount(), node.getOrderingScheme(), TopNNode.Step.SINGLE);
             }
             else if (rewrittenSource != node.getSource()) {
                 return new SortNode(node.getId(), rewrittenSource, node.getOrderingScheme());

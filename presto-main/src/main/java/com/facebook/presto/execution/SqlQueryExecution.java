@@ -422,6 +422,7 @@ public class SqlQueryExecution
         // plan query
         PlanNodeIdAllocator idAllocator = new PlanNodeIdAllocator();
         LogicalPlanner logicalPlanner = new LogicalPlanner(false, stateMachine.getSession(), planOptimizers, idAllocator, metadata, sqlParser, statsCalculator, costCalculator, stateMachine.getWarningCollector());
+        // 生成逻辑查询执行计划，先生成，在优化
         Plan plan = logicalPlanner.plan(analysis);
         queryPlan.set(plan);
 
@@ -434,6 +435,7 @@ public class SqlQueryExecution
         stateMachine.setOutput(output);
 
         // fragment the plan
+        // 分片逻辑查询执行计划，便于分布式执行
         SubPlan fragmentedPlan = planFragmenter.createSubPlans(stateMachine.getSession(), plan, false, idAllocator, stateMachine.getWarningCollector());
 
         // record analysis time

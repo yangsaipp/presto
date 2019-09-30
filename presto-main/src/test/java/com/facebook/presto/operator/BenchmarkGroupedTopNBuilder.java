@@ -78,7 +78,7 @@ public class BenchmarkGroupedTopNBuilder
         public void setup()
         {
             page = createInputPage(Integer.valueOf(positions), types);
-            topNBuilder = new GroupedTopNBuilder(types, comparator, Integer.valueOf(topN), false, new NoChannelGroupByHash());
+            topNBuilder = new GroupedTopNBuilder(types, comparator, 0, Integer.valueOf(topN), false, new NoChannelGroupByHash());
         }
 
         public GroupedTopNBuilder getTopNBuilder()

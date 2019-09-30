@@ -65,7 +65,8 @@ import static io.airlift.discovery.client.ServiceAnnouncement.serviceAnnouncemen
 import static io.airlift.json.JsonBinder.jsonBinder;
 import static java.util.Objects.requireNonNull;
 
-public class PrestoServer
+public class
+PrestoServer
         implements Runnable
 {
     public static void main(String[] args)

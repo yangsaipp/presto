@@ -339,7 +339,7 @@ public class SqlQueryManager
 
             WarningCollector warningCollector = warningCollectorFactory.create();
 
-            // prepare query
+            // prepare query 解析SQL语法生成Unresovled AST
             preparedQuery = queryPreparer.prepareQuery(session, query, warningCollector);
 
             // select resource group

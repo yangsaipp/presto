@@ -204,6 +204,7 @@ public class SymbolMapper
         return new TopNNode(
                 newNodeId,
                 source,
+                node.getOffset(),
                 node.getCount(),
                 new OrderingScheme(variables.build(), orderings.build()),
                 node.getStep());

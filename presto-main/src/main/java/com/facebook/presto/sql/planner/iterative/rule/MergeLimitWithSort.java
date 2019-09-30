@@ -49,6 +49,7 @@ public class MergeLimitWithSort
                 new TopNNode(
                         parent.getId(),
                         child.getSource(),
+                        parent.getOffset(),
                         parent.getCount(),
                         child.getOrderingScheme(),
                         parent.isPartial() ? TopNNode.Step.PARTIAL : TopNNode.Step.SINGLE));

@@ -176,10 +176,12 @@ public class LogicalPlanner
 
     public Plan plan(Analysis analysis, Stage stage)
     {
+        // 生成逻辑查询计划
         PlanNode root = planStatement(analysis, analysis.getStatement());
 
         planSanityChecker.validateIntermediatePlan(root, session, metadata, sqlParser, variableAllocator.getTypes(), warningCollector);
 
+        // 优化逻辑查询计划
         if (stage.ordinal() >= Stage.OPTIMIZED.ordinal()) {
             for (PlanOptimizer optimizer : planOptimizers) {
                 root = optimizer.optimize(root, session, variableAllocator.getTypes(), variableAllocator, idAllocator, warningCollector);

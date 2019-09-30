@@ -185,6 +185,7 @@ public class TopNRowNumberOperator
         this.groupedTopNBuilder = new GroupedTopNBuilder(
                 ImmutableList.copyOf(sourceTypes),
                 new SimplePageWithPositionComparator(types, sortChannels, sortOrders),
+                0,
                 maxRowCountPerPartition,
                 generateRowNumber,
                 groupByHash);

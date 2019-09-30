@@ -967,14 +967,14 @@ public class LocalExecutionPlanner
                 sortChannels.add(source.getLayout().get(variable));
                 sortOrders.add(node.getOrderingScheme().getOrdering(variable));
             }
-
             OperatorFactory operator = new TopNOperatorFactory(
                     context.getNextOperatorId(),
                     node.getId(),
                     source.getTypes(),
                     (int) node.getCount(),
                     sortChannels,
-                    sortOrders);
+                    sortOrders,
+                    node.isPartial(),(int)node.getOffset());
 
             return new PhysicalOperation(operator, source.getLayout(), context, source);
         }

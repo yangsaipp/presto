@@ -41,10 +41,12 @@ public class TopNOperator
         private final int operatorId;
         private final PlanNodeId planNodeId;
         private final List<Type> sourceTypes;
+        private final int offset;
         private final int n;
         private final List<Integer> sortChannels;
         private final List<SortOrder> sortOrders;
         private boolean closed;
+        private boolean isPartial;
 
         public TopNOperatorFactory(
                 int operatorId,
@@ -52,14 +54,30 @@ public class TopNOperator
                 List<? extends Type> types,
                 int n,
                 List<Integer> sortChannels,
-                List<SortOrder> sortOrders)
+                List<SortOrder> sortOrders
+                ) {
+            this(operatorId,planNodeId,types,n, sortChannels, sortOrders,false,0);
+        }
+
+        public TopNOperatorFactory(
+                int operatorId,
+                PlanNodeId planNodeId,
+                List<? extends Type> types,
+                int n,
+                List<Integer> sortChannels,
+                List<SortOrder> sortOrders,
+                boolean isPartial,
+                int offset
+                )
         {
             this.operatorId = operatorId;
             this.planNodeId = requireNonNull(planNodeId, "planNodeId is null");
             this.sourceTypes = ImmutableList.copyOf(requireNonNull(types, "types is null"));
             this.n = n;
+            this.offset = offset;
             this.sortChannels = ImmutableList.copyOf(requireNonNull(sortChannels, "sortChannels is null"));
             this.sortOrders = ImmutableList.copyOf(requireNonNull(sortOrders, "sortOrders is null"));
+            this.isPartial = isPartial;
         }
 
         @Override
@@ -67,10 +85,21 @@ public class TopNOperator
         {
             checkState(!closed, "Factory is already closed");
             OperatorContext operatorContext = driverContext.addOperatorContext(operatorId, planNodeId, TopNOperator.class.getSimpleName());
+//            int offset = 4;
+            if(this.isPartial) {
+                return new TopNOperator(
+                        operatorContext,
+                        sourceTypes,
+                        0,
+                        n + offset,
+                        sortChannels,
+                        sortOrders);
+            }
             return new TopNOperator(
                     operatorContext,
                     sourceTypes,
-                    n,
+                    offset,
+                    n + offset,
                     sortChannels,
                     sortOrders);
         }
@@ -84,7 +113,7 @@ public class TopNOperator
         @Override
         public OperatorFactory duplicate()
         {
-            return new TopNOperatorFactory(operatorId, planNodeId, sourceTypes, n, sortChannels, sortOrders);
+            return new TopNOperatorFactory(operatorId, planNodeId, sourceTypes, n, sortChannels, sortOrders, isPartial, offset);
         }
     }
 
@@ -93,12 +122,12 @@ public class TopNOperator
 
     private GroupedTopNBuilder topNBuilder;
     private boolean finishing;
-
     private Iterator<Page> outputIterator;
 
     public TopNOperator(
             OperatorContext operatorContext,
             List<Type> types,
+            int offset,
             int n,
             List<Integer> sortChannels,
             List<SortOrder> sortOrders)
@@ -115,6 +144,7 @@ public class TopNOperator
             topNBuilder = new GroupedTopNBuilder(
                     types,
                     new SimplePageWithPositionComparator(types, sortChannels, sortOrders),
+                    offset,
                     n,
                     false,
                     new NoChannelGroupByHash());

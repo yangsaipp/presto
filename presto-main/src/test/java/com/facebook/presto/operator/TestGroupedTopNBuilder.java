@@ -75,6 +75,7 @@ public class TestGroupedTopNBuilder
                 (left, leftPosition, right, rightPosition) -> {
                     throw new UnsupportedOperationException();
                 },
+                0,
                 5,
                 false,
                 new NoChannelGroupByHash());
@@ -110,6 +111,7 @@ public class TestGroupedTopNBuilder
         GroupedTopNBuilder groupedTopNBuilder = new GroupedTopNBuilder(
                 types,
                 new SimplePageWithPositionComparator(types, ImmutableList.of(1), ImmutableList.of(ASC_NULLS_LAST)),
+                0,
                 2,
                 produceRowNumbers,
                 groupByHash);
@@ -182,6 +184,7 @@ public class TestGroupedTopNBuilder
         GroupedTopNBuilder groupedTopNBuilder = new GroupedTopNBuilder(
                 types,
                 new SimplePageWithPositionComparator(types, ImmutableList.of(1), ImmutableList.of(ASC_NULLS_LAST)),
+                0,
                 5,
                 produceRowNumbers,
                 new NoChannelGroupByHash());
@@ -242,6 +245,7 @@ public class TestGroupedTopNBuilder
         GroupedTopNBuilder groupedTopNBuilder = new GroupedTopNBuilder(
                 types,
                 new SimplePageWithPositionComparator(types, ImmutableList.of(1), ImmutableList.of(ASC_NULLS_LAST)),
+                0,
                 5,
                 false,
                 groupByHash);
@@ -292,6 +296,7 @@ public class TestGroupedTopNBuilder
         GroupedTopNBuilder groupedTopNBuilder = new GroupedTopNBuilder(
                 types,
                 new SimplePageWithPositionComparator(types, ImmutableList.of(1), ImmutableList.of(ASC_NULLS_LAST)),
+                0,
                 1,
                 false,
                 createGroupByHash(ImmutableList.of(types.get(0)), ImmutableList.of(0), NOOP));
@@ -386,6 +391,7 @@ public class TestGroupedTopNBuilder
         GroupedTopNBuilder groupedTopNBuilder = new GroupedTopNBuilder(
                 types,
                 new SimplePageWithPositionComparator(types, ImmutableList.of(1), ImmutableList.of(ASC_NULLS_LAST)),
+                0,
                 pageCount * rowCount,
                 false,
                 groupByHash);

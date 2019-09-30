@@ -883,15 +883,15 @@ class QueryPlanner
 
     private PlanBuilder sort(PlanBuilder subPlan, Query node)
     {
-        return sort(subPlan, node.getOrderBy(), node.getLimit(), analysis.getOrderByExpressions(node));
+        return sort(subPlan, node.getOrderBy(), node.getLimit(), analysis.getOrderByExpressions(node), node.getOffset());
     }
 
     private PlanBuilder sort(PlanBuilder subPlan, QuerySpecification node)
     {
-        return sort(subPlan, node.getOrderBy(), node.getLimit(), analysis.getOrderByExpressions(node));
+        return sort(subPlan, node.getOrderBy(), node.getLimit(), analysis.getOrderByExpressions(node), node.getOffset());
     }
 
-    private PlanBuilder sort(PlanBuilder subPlan, Optional<OrderBy> orderBy, Optional<String> limit, List<Expression> orderByExpressions)
+    private PlanBuilder sort(PlanBuilder subPlan, Optional<OrderBy> orderBy, Optional<String> limit, List<Expression> orderByExpressions,Optional<String> offset)
     {
         if (!orderBy.isPresent()) {
             return subPlan;
@@ -902,7 +902,7 @@ class QueryPlanner
                 orderByExpressions.stream().map(subPlan::translate).collect(toImmutableList()),
                 orderBy.get().getSortItems().stream().map(PlannerUtils::toSortOrder).collect(toImmutableList()));
         if (limit.isPresent() && !limit.get().equalsIgnoreCase("all")) {
-            planNode = new TopNNode(idAllocator.getNextId(), subPlan.getRoot(), Long.parseLong(limit.get()), orderingScheme, TopNNode.Step.SINGLE);
+            planNode = new TopNNode(idAllocator.getNextId(), subPlan.getRoot(), Long.parseLong(offset.orElse("0")), Long.parseLong(limit.get()), orderingScheme, TopNNode.Step.SINGLE);
         }
         else {
             planNode = new SortNode(idAllocator.getNextId(), subPlan.getRoot(), orderingScheme);

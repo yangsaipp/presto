@@ -44,12 +44,14 @@ public class TopNNode
 
     private final PlanNode source;
     private final long count;
+    private final long offset;
     private final OrderingScheme orderingScheme;
     private final Step step;
 
     @JsonCreator
     public TopNNode(@JsonProperty("id") PlanNodeId id,
             @JsonProperty("source") PlanNode source,
+            @JsonProperty("offset") long offset,
             @JsonProperty("count") long count,
             @JsonProperty("orderingScheme") OrderingScheme orderingScheme,
             @JsonProperty("step") Step step)
@@ -58,16 +60,23 @@ public class TopNNode
 
         requireNonNull(source, "source is null");
         checkArgument(count >= 0, "count must be positive");
+        checkArgument(offset >= 0, "offset must be positive");
         checkCondition(count <= Integer.MAX_VALUE, NOT_SUPPORTED, "ORDER BY LIMIT > %s is not supported", Integer.MAX_VALUE);
         requireNonNull(orderingScheme, "orderingScheme is null");
 
         this.source = source;
         this.count = count;
+        this.offset = offset;
         this.orderingScheme = orderingScheme;
         this.step = requireNonNull(step, "step is null");
     }
 
-    @Override
+    @JsonProperty("offset")
+    public long getOffset() {
+		return offset;
+	}
+
+	@Override
     public List<PlanNode> getSources()
     {
         return ImmutableList.of(source);
@@ -112,6 +121,10 @@ public class TopNNode
     @Override
     public PlanNode replaceChildren(List<PlanNode> newChildren)
     {
-        return new TopNNode(getId(), Iterables.getOnlyElement(newChildren), count, orderingScheme, step);
+        return new TopNNode(getId(), Iterables.getOnlyElement(newChildren), offset, count, orderingScheme, step);
+    }
+    
+    public boolean isPartial() {
+    	return Step.PARTIAL.equals(step);
     }
 }
